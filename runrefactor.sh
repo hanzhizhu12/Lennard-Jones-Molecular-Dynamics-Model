@@ -3,4 +3,4 @@
 set -e
 g++ -std=c++17 -Wall -Wextra -O2 refactor.cpp  -o refactor
 ./refactor
-python3 plot.py "$@"
+python3 plotrefactor.py "$@"

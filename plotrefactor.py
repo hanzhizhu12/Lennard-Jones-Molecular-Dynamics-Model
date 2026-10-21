@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
  
 t, x_e, v_e, E_e = np.loadtxt("euler.dat", unpack=True)
 _, x_v, v_v, E_v = np.loadtxt("verlet.dat", unpack=True)
+
 exact = np.cos(t)                  # x(0)=1, v(0)=0, k=m=1
  
 fig, axs = plt.subplots(1, 3, figsize=(15, 6))
