@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 
 const double epsilon = 1.0;
 const double sigma = 1.0;
@@ -68,6 +69,45 @@ void write_xyz(std::ofstream& out, const System& sys, double t) {
     }
 }
 
+void write_energy(std::ofstream& out, const System& sys, double U, double t) {
+    double KE = kinetic_energy(sys);
+    double T = temperature(sys, KE);
+    out << t << " " << KE << " " << U << " " << U + KE << " " << T << "\n";
+}
+
+double step(System& sys, double dt) {
+    for (std::size_t i = 0; i < sys.pos.size(); ++i) {
+        sys.vel[i] += 0.5 * dt * sys.force[i] / sys.mass[i];
+        sys.pos[i] += dt * sys.vel[i];
+    }
+    
+    double U = compute_forces(sys);
+
+    for (std::size_t i = 0; i < sys.pos.size(); ++i) {
+        sys.vel[i] += 0.5 * dt * sys.force[i] / sys.mass[i];
+    }
+    return U;
+}
+
+double fd_check(System& sys, std::size_t i, double h) {
+    compute_forces(sys);
+
+    double F0 = sys.force[i].x;
+    double pos0 = sys.pos[i].x;
+    sys.pos[i].x += h;
+    double Uplush = compute_forces(sys);
+    sys.pos[i].x = pos0;
+    sys.pos[i].x -= h;
+    double Uminush = compute_forces(sys);
+    double derivU = - ((Uplush - Uminush) / (2 * h));
+
+    sys.pos[i].x = pos0;
+    compute_forces(sys);
+
+    return derivU - F0;
+}
+
+
 int main() {
     System sys;
     sys.pos.resize(N);
@@ -80,49 +120,27 @@ int main() {
     sys.mass.resize(N, 1.0);
     
     double U0 = compute_forces(sys);
-    double KE0 = kinetic_energy(sys);
-    double T0 = temperature(sys, KE0);
 
     //sanity check
-    double F0 = sys.force[0].x;
-    double pos0 = sys.pos[0].x;
     const double h = 1e-6;
-    sys.pos[0].x += h;
-    double Uplush = compute_forces(sys);
-    sys.pos[0].x = pos0;
-    sys.pos[0].x -= h;
-    double Uminush = compute_forces(sys);
-    double derivU = - ((Uplush - Uminush) / (2 * h));
-    std::cout << "Derivative - Analytic Force:" << derivU - F0 << " "<< "Derivative:" << derivU << " " << "Analytic:" << F0 << "\n";
-    
-    sys.pos[0].x = pos0;
-    compute_forces(sys);
+    for (std::size_t i = 0; i < sys.pos.size(); ++i) {
+        double difference = fd_check(sys, i, h);
+        std::cout << i << " " << difference << "\n";
+    }
 
     std::ofstream energy_out("ljN.dat");
+    energy_out << std::setprecision(10);
     energy_out << "# t KE U E T\n";
-    energy_out << 0.0 << " " << KE0 << " " << U0 << " " << U0 + KE0 << " " << T0 << "\n";
+    write_energy(energy_out, sys, U0, 0.0);
 
     std::ofstream xyz_out("ljN.xyz");
     write_xyz(xyz_out, sys, 0.0);
-    for (std::size_t step = 0; step < step_count; ++step) {
+    for (std::size_t n = 0; n < step_count; ++n) {
+        double U = step(sys, dt);
 
-        for (std::size_t i = 0; i < sys.pos.size(); ++i) {
-            sys.vel[i] += 0.5 * dt * sys.force[i] / sys.mass[i];
-            sys.pos[i] += dt * sys.vel[i];
-        }
-        double U = compute_forces(sys);
-
-        for (std::size_t i = 0; i < sys.pos.size(); ++i) {
-            sys.vel[i] += 0.5 * dt * sys.force[i] / sys.mass[i];
-        }
-
-        double KE = kinetic_energy(sys);
-        double T = temperature(sys, KE);
-
-        if ((step + 1) % quantizer == 0) {
-            energy_out << (step + 1) * dt << " " << KE << " " << U << " " << U + KE << " " << T << "\n";
-       
-            write_xyz(xyz_out, sys, (step + 1) * dt);
+        if ((n + 1) % quantizer == 0) {
+            write_energy(energy_out, sys, U, dt);
+            write_xyz(xyz_out, sys, (n + 1) * dt);
         }
     }
 }
