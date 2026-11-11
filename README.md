@@ -21,8 +21,12 @@ From the project folder, create the Python environment once:
 
 ## Running
 
-    bash runljN.sh          # compile, run, save the plot
-    bash runljN.sh --show   # same, and open the plot window
+    For the LJ Model
+    bash scripts/runljN.sh          # compile, run, save the plot
+    bash scripts/runljN.sh --show   # same, and open the plot window
+
+    For the Oscillator:
+    bash scripts/runoscillator.sh --show   # Stage 1: 3D harmonic oscillator, Verlet vs. Euler
 
 The program asks for two values:
 
@@ -34,6 +38,8 @@ The program asks for two values:
 At `a = 2^(1/6) ≈ 1.122462`, every pair sits at the bottom of the potential well, so the particles stay still. Any other value makes the shape oscillate.
 
 The timestep (`dt = 0.005`) and run length (`tmax = 100`) are set at the top of `ljN.cpp`.
+
+
 
 ## Output
 
@@ -57,7 +63,8 @@ In every run, E − E0 should stay in a narrow band with no drift. The width of 
 
 ## Files
 
-- `ljN.cpp`: the simulation (forces, integrator, setup, output)
-- `vec3.h`: the 3D vector type and its operators
-- `plotljN.py`: plots `ljN.dat`
-- `runljN.sh`: builds and runs everything
+- `src/ljN.cpp`: the Lennard-Jones simulation (forces, integrator, setup, output)
+- `src/vec3.h`: the 3D vector type and its operators
+- `src/oscillator.cpp`: the harmonic oscillator test (Verlet vs. Euler)
+- `scripts/`: run and plot scripts; run them from the repo root
+- `images/`: example output
