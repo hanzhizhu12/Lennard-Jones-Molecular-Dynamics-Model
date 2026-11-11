@@ -1,0 +1,11 @@
+.DS_Store
+.venv/
+build/
+*.dat
+*.xyz
+/*.png
+ljN
+euler
+oscillator
+refactor
+verlet
